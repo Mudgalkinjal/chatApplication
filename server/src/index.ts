@@ -3,8 +3,21 @@ import dotenv from 'dotenv'
 import connectDB from './config/db'
 import cors from 'cors'
 import authRoutes from './routes/auth'
+import transporter from './config/transporter'
 
 dotenv.config()
+console.log('SMTP_HOST:', process.env.SMTP_HOST)
+console.log('PORT:', process.env.PORT)
+console.log('EMAIL_USER:', process.env.EMAIL_USER)
+console.log('EMAIL_PASS:', process.env.EMAIL_PASS ? 'Loaded' : 'Missing')
+
+transporter.verify((error, success) => {
+  if (error) {
+    console.error('SMTP connection error:', error)
+  } else {
+    console.log('SMTP connection successful:', success)
+  }
+})
 
 const app = express()
 app.use(cors())
@@ -13,7 +26,7 @@ app.use(cors())
 app.use(express.json())
 
 // Connect to Database
-connectDB() // Will log a warning if the connection string is not provided
+connectDB()
 
 // Mount the auth routes
 app.use('/api/auth', authRoutes)
