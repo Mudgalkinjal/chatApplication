@@ -1,6 +1,14 @@
 import React from 'react'
+import { useNavigate } from 'react-router-dom'
 
 const HomePage = () => {
+  const navigate = useNavigate()
+  function handleSignUpNavigate() {
+    navigate('/signup')
+  }
+  function handleSignInNavigate() {
+    navigate('/signin')
+  }
   return (
     <div className="font-sans">
       {/* Hero Section */}
@@ -10,8 +18,17 @@ const HomePage = () => {
           A fun and engaging way to track your productivity, earn rewards, and
           celebrate achievements.
         </p>
-        <button className="px-6 py-3 bg-white text-green-500 font-semibold rounded-lg shadow-md hover:bg-gray-100">
+        <button
+          onClick={handleSignUpNavigate}
+          className="px-6 py-3 bg-white text-green-500 font-semibold rounded-lg shadow-md hover:bg-gray-100"
+        >
           Get Started
+        </button>
+        <button
+          onClick={handleSignInNavigate}
+          className="px-6 py-3 ml-2 bg-white text-green-500 font-semibold rounded-lg shadow-md hover:bg-gray-100"
+        >
+          Sign In
         </button>
       </section>
 

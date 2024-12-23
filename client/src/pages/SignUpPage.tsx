@@ -1,7 +1,8 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as Yup from 'yup'
+import { useNavigate } from 'react-router-dom'
 
 type SignUpFormData = {
   name: string
@@ -25,6 +26,15 @@ const validationSchema = Yup.object().shape({
 })
 
 const SignUpPage = () => {
+  const navigate = useNavigate()
+
+  function handleSignInNavigate() {
+    navigate('/signin')
+  }
+
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+
   const {
     register,
     handleSubmit,
@@ -34,6 +44,8 @@ const SignUpPage = () => {
   })
 
   const onSubmit = async (data: SignUpFormData) => {
+    setError('')
+    setSuccess('')
     try {
       const response = await fetch('http://localhost:5001/api/auth/signup', {
         method: 'POST',
@@ -42,13 +54,18 @@ const SignUpPage = () => {
         },
         body: JSON.stringify(data),
       })
-      if (response.ok) {
-        console.log('User registered successfully')
+      console.log('here')
+
+      const responseData = await response.json()
+
+      if (!response.ok) {
+        setError(responseData.message)
       } else {
-        console.error('Failed to register user')
+        // Handle success response
+        setSuccess(responseData.message)
       }
     } catch (error) {
-      console.error('Error:', error)
+      setError('Something went wrong. Please try again later.')
     }
   }
 
@@ -58,6 +75,14 @@ const SignUpPage = () => {
         <h2 className="text-2xl font-bold text-center text-green-500 mb-6">
           Sign Up
         </h2>
+
+        {/* Error Message */}
+        {error && <div className="text-red-500 text-center mb-4">{error}</div>}
+
+        {/* Success Message */}
+        {success && (
+          <div className="text-green-500 text-center mb-4">{success}</div>
+        )}
         <form onSubmit={handleSubmit(onSubmit)}>
           {/* Name Field */}
           <div className="mb-4">
@@ -153,6 +178,13 @@ const SignUpPage = () => {
             Sign Up
           </button>
         </form>
+        {/* Sign In Button */}
+        <button
+          onClick={handleSignInNavigate}
+          className="w-full mt-4 bg-gray-100 text-green-500 py-2 px-4 rounded-lg hover:bg-gray-200"
+        >
+          Already have an account? Sign In
+        </button>
       </div>
     </div>
   )
