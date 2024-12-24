@@ -5,6 +5,7 @@ import Homepage from './pages/Homepage'
 import SignUpPage from './pages/SignUpPage'
 import Signinpage from './pages/Signinpage'
 import Apppage from './pages/Apppage'
+import VerifyEmail from './pages/VerifyEmail'
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="/signin" element={<Signinpage />} />
         <Route path="/app" element={<Apppage />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
       </Routes>
     </Router>
     // <div className="App">
