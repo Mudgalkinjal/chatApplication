@@ -5,23 +5,6 @@ import nodemailer from 'nodemailer'
 import jwt from 'jsonwebtoken'
 import transporter from '../config/transporter'
 
-transporter.sendMail(
-  {
-    from: '"Your App Name" <your-email@example.com>', // Sender address
-    to: 'test-recipient@example.com', // Receiver email
-    subject: 'Test Email',
-    text: 'This is a test email sent from Nodemailer!',
-    html: '<p>This is a test email sent from <strong>Nodemailer</strong>!</p>',
-  },
-  (error, info) => {
-    if (error) {
-      console.error('Error sending email:', error)
-    } else {
-      console.log('Email sent successfully:', info.response)
-    }
-  }
-)
-
 const router = express.Router()
 
 // Example route
@@ -48,7 +31,7 @@ router.post('/signup', async (req: Request, res: Response) => {
       expiresIn: '1h', // Token expires in 1 hour
     })
 
-    const verificationUrl = `http://localhost:3000/verify-email?token=${token}`
+    const verificationUrl = `${process.env.BASE_URL}/api/auth/verify-email?token=${token}`
     const mailOptions = {
       from: 'noreply@yourapp.com',
       to: email,
@@ -66,7 +49,7 @@ router.post('/signup', async (req: Request, res: Response) => {
 
     await newUser.save()
 
-    res.status(201).json({ message: 'User registered successfully' })
+    res.status(201).json({ message: 'Verification email sent' })
   } catch (error: any) {
     if (error.code === 11000) {
       // MongoDB duplicate key error
@@ -76,8 +59,12 @@ router.post('/signup', async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Server error' })
   }
 })
-router.get('/verify-email', async (req: Request, res: Response) => {
+router.get('/verify-email', async (req, res) => {
   const { token } = req.query
+
+  if (!token) {
+    return res.redirect('http://localhost:3000/verify-email?status=error')
+  }
 
   try {
     const decoded = jwt.verify(
@@ -88,18 +75,25 @@ router.get('/verify-email', async (req: Request, res: Response) => {
 
     const user = await User.findOne({ email })
     if (!user) {
-      return res.status(404).json({ message: 'User not found' })
+      return res.redirect(
+        'http://localhost:3000/verify-email?status=user-not-found'
+      )
+    }
+
+    if (user.isVerified) {
+      return res.redirect(
+        'http://localhost:3000/verify-email?status=already-verified'
+      )
     }
 
     user.isVerified = true
     await user.save()
 
-    res
-      .status(200)
-      .json({ message: 'Email verified successfully. You can now log in.' })
-  } catch (error: any) {
-    console.error('Verification error:', error.message)
-    res.status(400).json({ message: 'Invalid or expired verification link.' })
+    return res.redirect('http://localhost:3000/verify-email?status=success')
+  } catch (error) {
+    return res.redirect(
+      'http://localhost:3000/verify-email?status=invalid-token'
+    )
   }
 })
 
