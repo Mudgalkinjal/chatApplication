@@ -4,6 +4,7 @@ import User from '../models/User'
 import nodemailer from 'nodemailer'
 import jwt from 'jsonwebtoken'
 import transporter from '../config/transporter'
+import authenticate from '../middleware/authMiddleware'
 
 const router = express.Router()
 
@@ -110,12 +111,24 @@ router.post('/signin', async (req: Request, res: Response) => {
     if (!isPasswordValid) {
       return res.status(400).json({ message: 'Invalid credentials' })
     }
+    const token = jwt.sign(
+      { userId: user._id, email: user.email },
+      process.env.JWT_SECRET || 'your_secret',
+      { expiresIn: '1h' } // Token expires in 1 hour
+    )
 
-    res.status(200).json({ message: 'User signed in successfully' })
+    res.status(200).json({ token })
   } catch (error) {
     console.error('Error during sign in:', error)
     res.status(500).json({ message: 'Server error' })
   }
+})
+
+router.get('/protected', authenticate, (req: Request, res: Response) => {
+  res.json({
+    message: 'Access granted',
+    user: (req as any).user, // Bypass TypeScript type-checking
+  })
 })
 
 export default router
