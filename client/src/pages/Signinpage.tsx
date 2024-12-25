@@ -34,6 +34,7 @@ const Signinpage = () => {
   const onSubmit = async (data: SigninData) => {
     setError('')
     setSuccess('')
+
     try {
       const response = await fetch('http://localhost:5001/api/auth/signin', {
         method: 'POST',
@@ -42,16 +43,20 @@ const Signinpage = () => {
         },
         body: JSON.stringify(data),
       })
-      //   const responseData = await response.json()
+
+      const responseData = await response.json() // Parse the response JSON
 
       if (response.ok) {
-        setSuccess('User Signed in successfully')
+        localStorage.setItem('authToken', responseData.token) // Store the token
+        console.log('Signed in successfully!')
+        setSuccess('User signed in successfully')
         navigate('/app')
       } else {
-        setError('Incorrect password')
+        setError(responseData.message || 'Incorrect password') // Show server error
       }
     } catch (error) {
-      setError('Error')
+      console.error('Sign-in failed:', error)
+      setError('An error occurred. Please try again.')
     }
   }
 
