@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "node dist/index.js",
-    "dev": "nodemon src/index.ts"
+    "start": "node dist/server.js",
+    "dev": "nodemon src/index.ts",
+    "build": "tsc"
   },
   "license": "MIT",
   "dependencies": {
@@ -14,7 +15,8 @@
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.9.2",
-    "nodemailer": "^6.9.16"
+    "nodemailer": "^6.9.16",
+    "socket.io": "^4.8.1"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

@@ -9,6 +9,6 @@
     "resolveJsonModule": true,
     "typeRoots": ["./node_modules/@types", "./src/types"]
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "../client/src/api"],
   "exclude": ["node_modules"]
 }

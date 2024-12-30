@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express'
 import bcrypt from 'bcryptjs'
-import User from '../models/User'
+import { User } from '../models/User'
 import nodemailer from 'nodemailer'
 import jwt from 'jsonwebtoken'
 import transporter from '../config/transporter'
