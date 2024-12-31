@@ -28,9 +28,13 @@ router.post('/signup', async (req: Request, res: Response) => {
       password: hashedPassword,
       isVerified: false,
     })
-    const token = jwt.sign({ email }, process.env.JWT_SECRET || 'your_secret', {
-      expiresIn: '1h', // Token expires in 1 hour
-    })
+    const token = jwt.sign(
+      { name: name, email: email },
+      process.env.JWT_SECRET || 'your_secret',
+      {
+        expiresIn: '1h', // Token expires in 1 hour
+      }
+    )
 
     const verificationUrl = `${process.env.BASE_URL}/api/auth/verify-email?token=${token}`
     const mailOptions = {
@@ -112,7 +116,7 @@ router.post('/signin', async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Invalid credentials' })
     }
     const token = jwt.sign(
-      { userId: user._id, email: user.email },
+      { userId: user._id, email: user.email, name: user.name },
       process.env.JWT_SECRET || 'your_secret',
       { expiresIn: '1h' } // Token expires in 1 hour
     )
@@ -127,7 +131,7 @@ router.post('/signin', async (req: Request, res: Response) => {
 router.get('/protected', authenticate, (req: Request, res: Response) => {
   res.json({
     message: 'Access granted',
-    user: (req as any).user, // Bypass TypeScript type-checking
+    user: (req as any).user,
   })
 })
 

@@ -3,6 +3,7 @@ import dotenv from 'dotenv'
 import connectDB from './config/db'
 import cors from 'cors'
 import authRoutes from './routes/auth'
+import chatRoutes from './routes/chat'
 import transporter from './config/transporter'
 
 dotenv.config()
@@ -30,6 +31,7 @@ connectDB()
 
 // Mount the auth routes
 app.use('/api/auth', authRoutes)
+app.use('/api/chat', chatRoutes)
 
 // Start Server
 const PORT = process.env.PORT || 5001

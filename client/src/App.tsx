@@ -7,6 +7,7 @@ import Signinpage from './pages/Signinpage'
 import Apppage from './pages/Apppage'
 import VerifyEmail from './pages/VerifyEmail'
 import ProtectedRoute from './components/ProtectedRoutes'
+import ChatApp from './pages/ChatApp'
 
 function App() {
   return (
@@ -15,6 +16,14 @@ function App() {
         <Route path="/" element={<Homepage />} />
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="/signin" element={<Signinpage />} />
+        <Route
+          path="/chatapp"
+          element={
+            <ProtectedRoute>
+              <ChatApp />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/app"
           element={
@@ -26,10 +35,6 @@ function App() {
         <Route path="/verify-email" element={<VerifyEmail />} />
       </Routes>
     </Router>
-    // <div className="App">
-    //   {' '}
-    //   <Homepage />
-    // </div>
   )
 }
 
