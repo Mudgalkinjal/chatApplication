@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { sendMessage, getMessages, getUsers } from '../api/chat'
-import ReceiverPrompt from '../components/ReceiverPrompt'
 import { useNavigate } from 'react-router-dom'
 import { io, Socket } from 'socket.io-client'
 
@@ -25,16 +24,34 @@ const ChatApp = () => {
   const [users, setUsers] = useState<
     { name: string; email: string; id: string }[]
   >([])
+  const messagesEndRef = useRef<HTMLDivElement | null>(null)
+
+  const [unreadMessages, setUnreadMessages] = useState<Record<string, number>>(
+    {}
+  )
 
   useEffect(() => {
-    socket.on('receive_message', (data: string) => {
-      setMessages((prevMessages) => [...prevMessages, data])
+    socket.on('receive_message', (data) => {
+      console.log('New message received:', data)
+
+      // Check if the message is for the current user
+      if (data.receiver === user1) {
+        setMessages((prevMessages) => [...prevMessages, data])
+
+        // Update unread messages if chat is not active
+        if (data.sender !== user2) {
+          setUnreadMessages((prev) => ({
+            ...prev,
+            [data.sender]: (prev[data.sender] || 0) + 1,
+          }))
+        }
+      }
     })
 
     return () => {
       socket.off('receive_message')
     }
-  }, [])
+  }, [user1, user2])
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -116,6 +133,16 @@ const ChatApp = () => {
     fetchMessages()
   }, [user1, user2])
 
+  const scrollToBottom = () => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
+    }
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages])
+
   if (loading) {
     return <div className="text-center py-10 text-gray-700">Loading...</div>
   }
@@ -131,14 +158,32 @@ const ChatApp = () => {
   const handleUserSelection = (userId: string, userName: string) => {
     setUser2(userId)
     setUser2Name(userName)
+
+    // Reset unread messages for the selected user
+    setUnreadMessages((prev) => {
+      const updated = { ...prev }
+      delete updated[userId]
+      return updated
+    })
   }
 
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return
 
-    const msg = await sendMessage(user1, user2, newMessage)
-    socket.emit('send_message', msg)
-    setNewMessage('')
+    try {
+      const msg = await sendMessage(user1, user2, newMessage)
+
+      // Add the sent message to the messages state for the sender
+      setMessages((prevMessages) => [...prevMessages, msg])
+
+      // Emit the message to the server
+      socket.emit('send_message', msg)
+
+      // Clear the input field
+      setNewMessage('')
+    } catch (error) {
+      console.error('Error sending message:', error)
+    }
   }
 
   return (
@@ -152,16 +197,25 @@ const ChatApp = () => {
         <aside className="col-span-1 bg-gray-100 p-4 rounded-md shadow">
           <h2 className="text-lg font-semibold mb-4">Users</h2>
           {users.map((user) => (
-            <div key={user.id} className="py-2 border-b">
-              {user.name}
+            <div
+              key={user.id}
+              onClick={() => handleUserSelection(user.id, user.name)}
+              className="relative py-2 border-b cursor-pointer flex items-center justify-between"
+            >
+              <span>{user.name}</span>
+
+              {/* Notification Bubble */}
+              {unreadMessages[user.id] && (
+                <span className="flex items-center justify-center w-6 h-6 bg-red-500 text-white text-xs font-bold rounded-full">
+                  {unreadMessages[user.id]}
+                </span>
+              )}
             </div>
           ))}
         </aside>
 
         {/* Chat Section */}
         <section className="col-span-2 flex flex-col bg-white p-4 rounded-md shadow">
-          <ReceiverPrompt users={users} onSubmit={handleUserSelection} />
-
           <div className="flex-1 overflow-y-auto bg-gray-50 p-4 rounded-md mt-4">
             {messages &&
               messages.map((msg, index) => (
@@ -181,6 +235,9 @@ const ChatApp = () => {
                   </p>
                 </div>
               ))}
+
+            {/* Reference for automatic scroll */}
+            <div ref={messagesEndRef} />
           </div>
 
           <div className="mt-4 flex">
