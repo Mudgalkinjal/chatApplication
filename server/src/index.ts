@@ -1,9 +1,9 @@
 import express from 'express'
-import dotenv from 'dotenv'
+import { createServer } from 'http'
 import { Server } from 'socket.io'
-import http from 'http'
 import cors from 'cors'
-
+import dotenv from 'dotenv'
+import http from 'http'
 import connectDB from './config/db'
 import authRoutes from './routes/auth'
 import chatRoutes from './routes/chat'
@@ -12,48 +12,25 @@ import transporter from './config/transporter'
 // Load environment variables
 dotenv.config()
 
-// Initialize Express app
 const app = express()
-
-// Middleware
-app.use(cors())
-app.use(express.json())
-
-// Connect to Database
-connectDB()
-
-// Mount routes
-app.use('/api/auth', authRoutes)
-app.use('/api/chat', chatRoutes)
-
-// Health Check Route
-app.get('/', (req, res) => {
-  res.send('Server is running')
-})
-
-// Create HTTP server and integrate with Socket.IO
-const server = http.createServer(app)
-console.log('consoling server')
-console.log(server)
+const server = createServer(app)
 
 const io = new Server(server, {
   cors: {
-    origin: 'http://localhost:3000', // Allow requests from your frontend
-    methods: ['GET', 'POST'], // Allow necessary HTTP methods
+    origin: 'http://localhost:3000',
+    methods: ['GET', 'POST'],
   },
 })
-console.log('consoling  io')
-console.log(io)
-console.log('done consoling io')
 
-// Socket.IO event handlers
+app.use(cors())
+app.use(express.json())
+connectDB()
+
 io.on('connection', (socket) => {
-  console.log('in socket')
+  console.log('A user connected:', socket.id)
 
-  console.log('User connected:', socket.id)
-
-  socket.on('sendMessage', (data) => {
-    io.emit('receiveMessage', data) // Broadcast the message to all clients
+  socket.on('send_message', (data) => {
+    io.emit('receive_message', data)
   })
 
   socket.on('disconnect', () => {
@@ -61,7 +38,6 @@ io.on('connection', (socket) => {
   })
 })
 
-// Verify SMTP transporter
 transporter.verify((error, success) => {
   console.log('in transporter')
 
@@ -72,9 +48,16 @@ transporter.verify((error, success) => {
   }
 })
 
-// Start the server
-const PORT = process.env.PORT || 5001
-console.log('here')
+// Mount routes
+app.use('/api/auth', authRoutes)
+app.use('/api/chat', chatRoutes)
+
+// Health Check Route
+app.get('/', (req, res) => {
+  res.send('Server is running')
+})
+
+const PORT = 5001
 server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`)
+  console.log(`Server is running on port ${PORT}`)
 })

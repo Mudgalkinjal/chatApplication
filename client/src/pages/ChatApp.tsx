@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react'
 import { sendMessage, getMessages, getUsers } from '../api/chat'
 import ReceiverPrompt from '../components/ReceiverPrompt'
 import { useNavigate } from 'react-router-dom'
+import { io, Socket } from 'socket.io-client'
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001'
+const socket: Socket = io('http://localhost:5001') // Your backend URL
 
 const ChatApp = () => {
   const navigate = useNavigate()
@@ -23,6 +25,16 @@ const ChatApp = () => {
   const [users, setUsers] = useState<
     { name: string; email: string; id: string }[]
   >([])
+
+  useEffect(() => {
+    socket.on('receive_message', (data: string) => {
+      setMessages((prevMessages) => [...prevMessages, data])
+    })
+
+    return () => {
+      socket.off('receive_message')
+    }
+  }, [])
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -125,7 +137,7 @@ const ChatApp = () => {
     if (!newMessage.trim()) return
 
     const msg = await sendMessage(user1, user2, newMessage)
-    setMessages((prev) => [...prev, msg])
+    socket.emit('send_message', msg)
     setNewMessage('')
   }
 
