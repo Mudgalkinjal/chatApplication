@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as Yup from 'yup'
 import { useNavigate } from 'react-router-dom'
+const API_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5001'
 
 type SignUpFormData = {
   name: string
@@ -47,7 +48,7 @@ const SignUpPage = () => {
     setError('')
     setSuccess('')
     try {
-      const response = await fetch('http://localhost:5001/api/auth/signup', {
+      const response = await fetch(`${API_URL}/api/auth/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -72,8 +73,8 @@ const SignUpPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="w-full max-w-md bg-white p-8 shadow-lg rounded-lg">
-        <h2 className="text-2xl font-bold text-center text-green-500 mb-6">
-          Sign Up
+        <h2 className="text-2xl font-bold text-center text-indigo-600 mb-6">
+          Join ChatHub
         </h2>
 
         {/* Error Message */}
@@ -81,16 +82,16 @@ const SignUpPage = () => {
 
         {/* Success Message */}
         {success && (
-          <div className="text-green-500 text-center mb-4">{success}</div>
+          <div className="text-indigo-600 text-center mb-4">{success}</div>
         )}
         <form onSubmit={handleSubmit(onSubmit)}>
-          {/* Name Field */}
+          {/* Display Name Field */}
           <div className="mb-4">
             <label
               htmlFor="name"
               className="block text-sm font-medium text-gray-700"
             >
-              Name
+              Display Name
             </label>
             <input
               id="name"
@@ -98,7 +99,7 @@ const SignUpPage = () => {
               {...register('name')}
               className={`mt-1 block w-full px-4 py-2 border rounded-lg ${
                 errors.name ? 'border-red-500' : 'border-gray-300'
-              } focus:ring focus:ring-green-200`}
+              } focus:ring focus:ring-indigo-200`}
             />
             {errors.name && (
               <p className="text-red-500 text-sm">{errors.name.message}</p>
@@ -119,7 +120,7 @@ const SignUpPage = () => {
               {...register('email')}
               className={`mt-1 block w-full px-4 py-2 border rounded-lg ${
                 errors.email ? 'border-red-500' : 'border-gray-300'
-              } focus:ring focus:ring-green-200`}
+              } focus:ring focus:ring-indigo-200`}
             />
             {errors.email && (
               <p className="text-red-500 text-sm">{errors.email.message}</p>
@@ -132,7 +133,7 @@ const SignUpPage = () => {
               htmlFor="password"
               className="block text-sm font-medium text-gray-700"
             >
-              Password
+              Set Your Password
             </label>
             <input
               id="password"
@@ -140,7 +141,7 @@ const SignUpPage = () => {
               {...register('password')}
               className={`mt-1 block w-full px-4 py-2 border rounded-lg ${
                 errors.password ? 'border-red-500' : 'border-gray-300'
-              } focus:ring focus:ring-green-200`}
+              } focus:ring focus:ring-indigo-200`}
             />
             {errors.password && (
               <p className="text-red-500 text-sm">{errors.password.message}</p>
@@ -153,7 +154,7 @@ const SignUpPage = () => {
               htmlFor="confirmPassword"
               className="block text-sm font-medium text-gray-700"
             >
-              Confirm Password
+              Confirm Your Password
             </label>
             <input
               id="confirmPassword"
@@ -161,7 +162,7 @@ const SignUpPage = () => {
               {...register('confirmPassword')}
               className={`mt-1 block w-full px-4 py-2 border rounded-lg ${
                 errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
-              } focus:ring focus:ring-green-200`}
+              } focus:ring focus:ring-indigo-200`}
             />
             {errors.confirmPassword && (
               <p className="text-red-500 text-sm">
@@ -173,21 +174,20 @@ const SignUpPage = () => {
           {/* Submit Button */}
           <button
             type="submit"
-            className="w-full bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600"
+            className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700"
           >
-            Sign Up
+            Join Now
           </button>
         </form>
         {/* Sign In Button */}
         <button
           onClick={handleSignInNavigate}
-          className="w-full mt-4 bg-gray-100 text-green-500 py-2 px-4 rounded-lg hover:bg-gray-200"
+          className="w-full mt-4 bg-gray-100 text-indigo-600 py-2 px-4 rounded-lg hover:bg-gray-200"
         >
-          Already have an account? Sign In
+          Have an account? Log In to ChatHub
         </button>
       </div>
     </div>
   )
 }
-
 export default SignUpPage

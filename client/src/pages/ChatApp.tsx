@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { io, Socket } from 'socket.io-client'
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001'
-const socket: Socket = io('http://localhost:5001') // Your backend URL
+const socket: Socket = io(API_URL) // Your backend URL
 
 const ChatApp = () => {
   const navigate = useNavigate()
@@ -166,6 +166,10 @@ const ChatApp = () => {
       return updated
     })
   }
+  const handleSignOut = () => {
+    setUserData(null)
+    navigate('/signin')
+  }
 
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return
@@ -188,21 +192,22 @@ const ChatApp = () => {
 
   return (
     <div className="max-w-4xl mx-auto py-10 px-5">
-      <header className="bg-blue-500 text-white py-4 px-6 rounded-md mb-6">
+      {/* Header Section */}
+      <header className="bg-indigo-600 text-white py-4 px-6 rounded-md mb-6">
         <h1 className="text-xl font-semibold">Welcome, {userData.name}</h1>
       </header>
 
       <main className="grid grid-cols-3 gap-6">
         {/* User List */}
         <aside className="col-span-1 bg-gray-100 p-4 rounded-md shadow">
-          <h2 className="text-lg font-semibold mb-4">Users</h2>
+          <h2 className="text-lg font-semibold mb-4 text-indigo-600">Users</h2>
           {users.map((user) => (
             <div
               key={user.id}
               onClick={() => handleUserSelection(user.id, user.name)}
-              className="relative py-2 border-b cursor-pointer flex items-center justify-between"
+              className="relative py-2 border-b cursor-pointer flex items-center justify-between hover:bg-indigo-50"
             >
-              <span>{user.name}</span>
+              <span className="text-gray-700">{user.name}</span>
 
               {/* Notification Bubble */}
               {unreadMessages[user.id] && (
@@ -212,18 +217,28 @@ const ChatApp = () => {
               )}
             </div>
           ))}
+          <div className="mt-4 flex">
+            <button
+              onClick={handleSignOut}
+              className="bg-red-500 text-white px-2 py-1 rounded-md hover:bg-red-600 mt-2"
+            >
+              Sign Out
+            </button>
+          </div>
         </aside>
 
         {/* Chat Section */}
         <section className="col-span-2 flex flex-col bg-white p-4 rounded-md shadow">
-          <div className="flex-1 overflow-y-auto bg-gray-50 p-4 rounded-md mt-4">
-            {messages &&
+          <div className="flex-1 overflow-y-auto bg-gray-50 p-4 rounded-md">
+            {user2Name ? (
+              // Show messages when a user is selected
+              messages &&
               messages.map((msg, index) => (
                 <div
                   key={index}
                   className={`mb-4 p-3 rounded-md ${
                     msg.sender === user1
-                      ? 'bg-blue-100 text-blue-800 self-end'
+                      ? 'bg-indigo-100 text-indigo-800 self-end'
                       : 'bg-gray-200 text-gray-800'
                   }`}
                 >
@@ -234,23 +249,45 @@ const ChatApp = () => {
                     {msg.message}
                   </p>
                 </div>
-              ))}
+              ))
+            ) : (
+              // Placeholder content when no user is selected
+              <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                <p className="text-xl mb-2">
+                  👋 Select a user to start chatting!
+                </p>
+                <p className="text-sm text-gray-400">
+                  Browse the user list on the left and click to open a chat.
+                </p>
+              </div>
+            )}
 
             {/* Reference for automatic scroll */}
             <div ref={messagesEndRef} />
           </div>
 
+          {/* Message Input */}
           <div className="mt-4 flex">
             <input
               type="text"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               placeholder="Type a message"
-              className="flex-1 p-2 border rounded-md"
+              className={`flex-1 p-2 border rounded-md focus:ring ${
+                user2Name
+                  ? 'focus:ring-indigo-200'
+                  : 'bg-gray-200 cursor-not-allowed'
+              }`}
+              disabled={!user2Name} // Disable input if no user is selected
             />
             <button
               onClick={handleSendMessage}
-              className="ml-2 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+              className={`ml-2 px-4 py-2 rounded-md ${
+                user2Name
+                  ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                  : 'bg-gray-400 text-gray-600 cursor-not-allowed'
+              }`}
+              disabled={!user2Name} // Disable button if no user is selected
             >
               Send
             </button>
