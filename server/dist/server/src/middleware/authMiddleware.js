@@ -12,7 +12,8 @@ const authenticate = (req, res, next) => {
     }
     try {
         const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET || 'your_secret');
-        req.user = decoded; // TypeScript now recognizes `req.user`
+        req.user = decoded; // Cast req to any to bypass type-checking
+        console.log('Decoded user:', req.user);
         next();
     }
     catch (err) {

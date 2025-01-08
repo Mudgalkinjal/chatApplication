@@ -1,5 +1,4 @@
 "use strict";
-
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -15,11 +14,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
-const User_1 = __importDefault(require("../models/User"));
+const User_1 = require("../models/User");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const transporter_1 = __importDefault(require("../config/transporter"));
 const authMiddleware_1 = __importDefault(require("../middleware/authMiddleware"));
+const dotenv_1 = __importDefault(require("dotenv"));
 const router = express_1.default.Router();
+dotenv_1.default.config();
+//process.env.CLIENT_URL
 // Example route
 router.get('/', (req, res) => {
     res.send('Auth endpoint is working');
@@ -28,19 +30,19 @@ router.get('/', (req, res) => {
 router.post('/signup', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { name, email, password } = req.body;
     try {
-        const existingUser = yield User_1.default.findOne({ email });
+        const existingUser = yield User_1.User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ message: 'Email already exists' });
         }
         const hashedPassword = yield bcryptjs_1.default.hash(password, 12);
-        const newUser = new User_1.default({
+        const newUser = new User_1.User({
             name,
             email,
             password: hashedPassword,
             isVerified: false,
         });
-        const token = jsonwebtoken_1.default.sign({ email }, process.env.JWT_SECRET || 'your_secret', {
-            expiresIn: '1h',
+        const token = jsonwebtoken_1.default.sign({ name: name, email: email }, process.env.JWT_SECRET || 'your_secret', {
+            expiresIn: '1h', // Token expires in 1 hour
         });
         const verificationUrl = `${process.env.BASE_URL}/api/auth/verify-email?token=${token}`;
         const mailOptions = {
@@ -71,31 +73,31 @@ router.post('/signup', (req, res) => __awaiter(void 0, void 0, void 0, function*
 router.get('/verify-email', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { token } = req.query;
     if (!token) {
-        return res.redirect('http://localhost:3000/verify-email?status=error');
+        return res.redirect(`${process.env.CLIENT_URL}/verify-email?status=error`);
     }
     try {
         const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET || 'your_secret');
         const email = decoded.email;
-        const user = yield User_1.default.findOne({ email });
+        const user = yield User_1.User.findOne({ email });
         if (!user) {
-            return res.redirect('http://localhost:3000/verify-email?status=user-not-found');
+            return res.redirect(`${process.env.CLIENT_URL}/verify-email?status=user-not-found`);
         }
         if (user.isVerified) {
-            return res.redirect('http://localhost:3000/verify-email?status=already-verified');
+            return res.redirect(`${process.env.CLIENT_URL}/verify-email?status=already-verified`);
         }
         user.isVerified = true;
         yield user.save();
-        return res.redirect('http://localhost:3000/verify-email?status=success');
+        return res.redirect(`${process.env.CLIENT_URL}/verify-email?status=success`);
     }
     catch (error) {
-        return res.redirect('http://localhost:3000/verify-email?status=invalid-token');
+        return res.redirect(`${process.env.CLIENT_URL}/verify-email?status=invalid-token`);
     }
 }));
 // Sign In Route
 router.post('/signin', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, password } = req.body;
     try {
-        const user = yield User_1.default.findOne({ email });
+        const user = yield User_1.User.findOne({ email });
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
@@ -103,7 +105,7 @@ router.post('/signin', (req, res) => __awaiter(void 0, void 0, void 0, function*
         if (!isPasswordValid) {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
-        const token = jsonwebtoken_1.default.sign({ userId: user._id, email: user.email }, process.env.JWT_SECRET || 'your_secret', { expiresIn: '1h' } // Token expires in 1 hour
+        const token = jsonwebtoken_1.default.sign({ userId: user._id, email: user.email, name: user.name }, process.env.JWT_SECRET || 'your_secret', { expiresIn: '1h' } // Token expires in 1 hour
         );
         res.status(200).json({ token });
     }
