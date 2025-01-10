@@ -36,7 +36,6 @@ io.on('connection', (socket) => {
     });
 });
 transporter_1.default.verify((error, success) => {
-    console.log('in transporter');
     if (error) {
         console.error('SMTP connection error:', error);
     }

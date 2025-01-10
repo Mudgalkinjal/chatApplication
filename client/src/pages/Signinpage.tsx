@@ -49,7 +49,6 @@ const Signinpage = () => {
 
       if (response.ok) {
         localStorage.setItem('authToken', responseData.token) // Store the token
-        console.log('Signed in successfully!')
         setSuccess('User signed in successfully')
         navigate('/chatapp')
       } else {

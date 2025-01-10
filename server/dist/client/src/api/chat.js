@@ -40,7 +40,6 @@ exports.getMessages = getMessages;
 const getUsers = (user1) => __awaiter(void 0, void 0, void 0, function* () {
     const response = yield fetch(`${API_URL}/api/chat/getUsers?user1=${user1}`);
     const data = yield response.json(); // Parse the response body only once
-    console.log('Fetched Users:', data); // Log the parsed data
     return data;
 });
 exports.getUsers = getUsers;

@@ -36,6 +36,5 @@ export const getMessages = async (user1: string, user2: string) => {
 export const getUsers = async (user1: string) => {
   const response = await fetch(`${API_URL}/api/chat/getUsers?user1=${user1}`)
   const data = await response.json() // Parse the response body only once
-  console.log('Fetched Users:', data) // Log the parsed data
   return data
 }

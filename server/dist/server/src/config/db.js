@@ -22,7 +22,6 @@ const connectDB = () => __awaiter(void 0, void 0, void 0, function* () {
         }
         // Attempt connection
         yield mongoose_1.default.connect(mongoURI, {});
-        console.log('MongoDB connected successfully');
     }
     catch (error) {
         console.error(error.message);

@@ -12,8 +12,8 @@ const HomePage = () => {
   return (
     <div className="font-sans">
       {/* Hero Section */}
-      <section className="bg-indigo-600 text-white text-center py-20 px-4">
-        <h1 className="text-5xl font-bold mb-4">Welcome to ChatHub!</h1>
+      <section className="bg-[#546e04bf] text-white text-center py-20 px-4">
+        <h1 className="text-5xl font-bold mb-4">Welcome to my Chat App!</h1>
         <p className="text-lg mb-8">
           Connect, collaborate, and chat with your communities seamlessly.
         </p>

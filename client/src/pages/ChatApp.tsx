@@ -32,8 +32,6 @@ const ChatApp = () => {
 
   useEffect(() => {
     socket.on('receive_message', (data) => {
-      console.log('New message received:', data)
-
       // Check if the message is for the current user
       if (data.receiver === user1) {
         setMessages((prevMessages) => [...prevMessages, data])
@@ -121,7 +119,6 @@ const ChatApp = () => {
     const fetchMessages = async () => {
       try {
         if (!user1 || !user2) return // Ensure both users are set
-        console.log('Fetching messages between:', user1, 'and:', user2)
 
         const msgs = await getMessages(user1, user2) // Fetch messages from the API
         setMessages(msgs) // Update the state with fetched messages
