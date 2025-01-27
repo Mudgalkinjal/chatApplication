@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { io, Socket } from 'socket.io-client'
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001'
-const socket: Socket = io(API_URL) // Your backend URL
+const socket: Socket = io(API_URL)
 
 const ChatApp = () => {
   const navigate = useNavigate()
@@ -118,10 +118,10 @@ const ChatApp = () => {
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        if (!user1 || !user2) return // Ensure both users are set
+        if (!user1 || !user2) return
 
-        const msgs = await getMessages(user1, user2) // Fetch messages from the API
-        setMessages(msgs) // Update the state with fetched messages
+        const msgs = await getMessages(user1, user2)
+        setMessages(msgs)
       } catch (error) {
         console.error('Error fetching messages:', error)
       }
@@ -275,7 +275,7 @@ const ChatApp = () => {
                   ? 'focus:ring-indigo-200'
                   : 'bg-gray-200 cursor-not-allowed'
               }`}
-              disabled={!user2Name} // Disable input if no user is selected
+              disabled={!user2Name}
             />
             <button
               onClick={handleSendMessage}
@@ -284,7 +284,7 @@ const ChatApp = () => {
                   ? 'bg-indigo-600 text-white hover:bg-indigo-700'
                   : 'bg-gray-400 text-gray-600 cursor-not-allowed'
               }`}
-              disabled={!user2Name} // Disable button if no user is selected
+              disabled={!user2Name}
             >
               Send
             </button>

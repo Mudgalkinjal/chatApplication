@@ -5,6 +5,11 @@ function VerifyEmail() {
   const [searchParams] = useSearchParams()
   const status = searchParams.get('status')
   const [message, setMessage] = useState('')
+  const navigate = useNavigate()
+
+  function handleSignInNavigate() {
+    navigate('/signin')
+  }
 
   useEffect(() => {
     switch (status) {
@@ -33,11 +38,18 @@ function VerifyEmail() {
         </h1>
         <p
           className={`text-center text-lg ${
-            status === 'success' ? 'text-green-600' : 'text-red-600'
+            status === 'success' ? 'text-indigo-600' : 'text-red-600'
           }`}
         >
           {message}
         </p>
+        {/* Sign In Button */}
+        <button
+          onClick={handleSignInNavigate}
+          className="w-full mt-4 bg-indigo-500 text-white py-2 px-4 rounded-lg hover:bg-indigo-700"
+        >
+          Log In to ChatHub
+        </button>
       </div>
     </div>
   )

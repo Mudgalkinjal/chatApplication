@@ -61,7 +61,7 @@ const Signinpage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+    <div className="min-h-screen bg-[#546e04bf] flex items-center justify-center">
       <div className="w-full max-w-md bg-white p-8 shadow-lg rounded-lg">
         <h2 className="text-2xl font-bold text-center text-indigo-600 mb-6">
           Welcome Back to ChatHub
