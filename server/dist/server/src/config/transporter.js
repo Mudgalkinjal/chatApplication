@@ -4,13 +4,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const nodemailer_1 = __importDefault(require("nodemailer"));
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
 const transporter = nodemailer_1.default.createTransport({
-    host: 'smtp.gmail.com', // Should be smtp.gmail.com
-    port: parseInt(process.env.SMTP_PORT || '587'), // 587 for TLS
-    secure: false, // false for port 587
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT || '587'),
+    secure: false,
     auth: {
-        user: 'kinjalmudgal89@gmail.com', // Your Gmail email address
-        pass: 'dqrzithgwjdzmngm', // Gmail App Password
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
     },
 });
 exports.default = transporter;
