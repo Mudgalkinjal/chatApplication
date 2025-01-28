@@ -9,8 +9,7 @@ const authenticate = (req: Request, res: Response, next: NextFunction) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_secret')
-    ;(req as any).user = decoded // Cast req to any to bypass type-checking
-    console.log('Decoded user:', (req as any).user)
+    ;(req as any).user = decoded
     next()
   } catch (err) {
     res.status(403).json({ message: 'Invalid or expired token' })

@@ -32,11 +32,9 @@ const ChatApp = () => {
 
   useEffect(() => {
     socket.on('receive_message', (data) => {
-      // Check if the message is for the current user
       if (data.receiver === user1) {
         setMessages((prevMessages) => [...prevMessages, data])
 
-        // Update unread messages if chat is not active
         if (data.sender !== user2) {
           setUnreadMessages((prev) => ({
             ...prev,
@@ -88,13 +86,12 @@ const ChatApp = () => {
     }
 
     fetchUserData()
-  }, [])
+  }, [navigate])
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         const response = await getUsers(user1)
 
-        // Ensure response is an array
         if (!Array.isArray(response)) {
           console.error('Invalid response format. Expected an array.')
           return
@@ -156,7 +153,6 @@ const ChatApp = () => {
     setUser2(userId)
     setUser2Name(userName)
 
-    // Reset unread messages for the selected user
     setUnreadMessages((prev) => {
       const updated = { ...prev }
       delete updated[userId]
@@ -174,13 +170,10 @@ const ChatApp = () => {
     try {
       const msg = await sendMessage(user1, user2, newMessage)
 
-      // Add the sent message to the messages state for the sender
       setMessages((prevMessages) => [...prevMessages, msg])
 
-      // Emit the message to the server
       socket.emit('send_message', msg)
 
-      // Clear the input field
       setNewMessage('')
     } catch (error) {
       console.error('Error sending message:', error)
