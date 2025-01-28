@@ -45,14 +45,14 @@ const Signinpage = () => {
         body: JSON.stringify(data),
       })
 
-      const responseData = await response.json() // Parse the response JSON
-
+      const responseData = await response.json()
+      console.log(responseData)
       if (response.ok) {
-        localStorage.setItem('authToken', responseData.token) // Store the token
+        localStorage.setItem('authToken', responseData.token)
         setSuccess('User signed in successfully')
         navigate('/chatapp')
       } else {
-        setError(responseData.message || 'Incorrect password') // Show server error
+        setError(responseData.message || 'Incorrect password')
       }
     } catch (error) {
       console.error('Sign-in failed:', error)

@@ -63,7 +63,6 @@ router.post('/signup', (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
     catch (error) {
         if (error.code === 11000) {
-            // MongoDB duplicate key error
             return res.status(400).json({ message: 'Email already exists' });
         }
         console.error('Error during sign up:', error);
@@ -96,6 +95,7 @@ router.get('/verify-email', (req, res) => __awaiter(void 0, void 0, void 0, func
 // Sign In Route
 router.post('/signin', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, password } = req.body;
+    console.log(email);
     try {
         const user = yield User_1.User.findOne({ email });
         if (!user) {
@@ -105,8 +105,7 @@ router.post('/signin', (req, res) => __awaiter(void 0, void 0, void 0, function*
         if (!isPasswordValid) {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
-        const token = jsonwebtoken_1.default.sign({ userId: user._id, email: user.email, name: user.name }, process.env.JWT_SECRET || 'your_secret', { expiresIn: '1h' } // Token expires in 1 hour
-        );
+        const token = jsonwebtoken_1.default.sign({ userId: user._id, email: user.email, name: user.name }, process.env.JWT_SECRET || 'your_secret', { expiresIn: '1h' });
         res.status(200).json({ token });
     }
     catch (error) {

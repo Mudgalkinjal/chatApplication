@@ -61,7 +61,6 @@ router.post('/signup', async (req: Request, res: Response) => {
     res.status(201).json({ message: 'Verification email sent' })
   } catch (error: any) {
     if (error.code === 11000) {
-      // MongoDB duplicate key error
       return res.status(400).json({ message: 'Email already exists' })
     }
     console.error('Error during sign up:', error)
@@ -109,6 +108,8 @@ router.get('/verify-email', async (req, res) => {
 // Sign In Route
 router.post('/signin', async (req: Request, res: Response) => {
   const { email, password } = req.body
+  console.log(email)
+
   try {
     const user = await User.findOne({ email })
     if (!user) {
@@ -122,7 +123,7 @@ router.post('/signin', async (req: Request, res: Response) => {
     const token = jwt.sign(
       { userId: user._id, email: user.email, name: user.name },
       process.env.JWT_SECRET || 'your_secret',
-      { expiresIn: '1h' } // Token expires in 1 hour
+      { expiresIn: '1h' }
     )
 
     res.status(200).json({ token })
