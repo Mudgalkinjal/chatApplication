@@ -10,7 +10,6 @@ type SigninData = {
   password: string
 }
 
-// Validation Schema
 const validationSchema = Yup.object().shape({
   email: Yup.string()
     .email('Invalid email address')
@@ -46,9 +45,10 @@ const Signinpage = () => {
       })
 
       const responseData = await response.json()
-      console.log(responseData)
+
       if (response.ok) {
         localStorage.setItem('authToken', responseData.token)
+        console.log('Signed in successfully!')
         setSuccess('User signed in successfully')
         navigate('/chatapp')
       } else {

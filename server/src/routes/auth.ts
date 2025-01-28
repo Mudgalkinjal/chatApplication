@@ -6,11 +6,11 @@ import jwt from 'jsonwebtoken'
 import transporter from '../config/transporter'
 import authenticate from '../middleware/authMiddleware'
 import dotenv from 'dotenv'
+import { getUserDataByEmail } from '../utils/userHelpers'
 
 const router = express.Router()
 
 dotenv.config()
-//process.env.CLIENT_URL
 
 // Example route
 router.get('/', (req: Request, res: Response) => {
@@ -36,7 +36,7 @@ router.post('/signup', async (req: Request, res: Response) => {
       { name: name, email: email },
       process.env.JWT_SECRET || 'your_secret',
       {
-        expiresIn: '1h', // Token expires in 1 hour
+        expiresIn: '1h',
       }
     )
 
@@ -108,8 +108,6 @@ router.get('/verify-email', async (req, res) => {
 // Sign In Route
 router.post('/signin', async (req: Request, res: Response) => {
   const { email, password } = req.body
-  console.log(email)
-
   try {
     const user = await User.findOne({ email })
     if (!user) {
@@ -121,7 +119,7 @@ router.post('/signin', async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Invalid credentials' })
     }
     const token = jwt.sign(
-      { userId: user._id, email: user.email, name: user.name },
+      { userId: user._id, email: user.email },
       process.env.JWT_SECRET || 'your_secret',
       { expiresIn: '1h' }
     )
@@ -133,11 +131,23 @@ router.post('/signin', async (req: Request, res: Response) => {
   }
 })
 
-router.get('/protected', authenticate, (req: Request, res: Response) => {
-  res.json({
-    message: 'Access granted',
-    user: (req as any).user,
-  })
+router.get('/protected', authenticate, async (req: Request, res: Response) => {
+  try {
+    const email = (req as any).user?.email
+    if (!email) {
+      return res.status(400).json({ message: 'Email not found in request' })
+    }
+
+    const user = await getUserDataByEmail(email)
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' })
+    }
+
+    return res.json({ message: 'Access granted', user })
+  } catch (error) {
+    console.error('Error fetching user data:', error)
+    return res.status(500).json({ message: 'Server error' })
+  }
 })
 
 export default router
