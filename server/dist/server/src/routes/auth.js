@@ -19,9 +19,9 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const transporter_1 = __importDefault(require("../config/transporter"));
 const authMiddleware_1 = __importDefault(require("../middleware/authMiddleware"));
 const dotenv_1 = __importDefault(require("dotenv"));
+const userHelpers_1 = require("../utils/userHelpers");
 const router = express_1.default.Router();
 dotenv_1.default.config();
-//process.env.CLIENT_URL
 // Example route
 router.get('/', (req, res) => {
     res.send('Auth endpoint is working');
@@ -42,7 +42,7 @@ router.post('/signup', (req, res) => __awaiter(void 0, void 0, void 0, function*
             isVerified: false,
         });
         const token = jsonwebtoken_1.default.sign({ name: name, email: email }, process.env.JWT_SECRET || 'your_secret', {
-            expiresIn: '1h', // Token expires in 1 hour
+            expiresIn: '1h',
         });
         const verificationUrl = `${process.env.BASE_URL}/api/auth/verify-email?token=${token}`;
         const mailOptions = {
@@ -95,7 +95,6 @@ router.get('/verify-email', (req, res) => __awaiter(void 0, void 0, void 0, func
 // Sign In Route
 router.post('/signin', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, password } = req.body;
-    console.log(email);
     try {
         const user = yield User_1.User.findOne({ email });
         if (!user) {
@@ -105,7 +104,7 @@ router.post('/signin', (req, res) => __awaiter(void 0, void 0, void 0, function*
         if (!isPasswordValid) {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
-        const token = jsonwebtoken_1.default.sign({ userId: user._id, email: user.email, name: user.name }, process.env.JWT_SECRET || 'your_secret', { expiresIn: '1h' });
+        const token = jsonwebtoken_1.default.sign({ userId: user._id, email: user.email }, process.env.JWT_SECRET || 'your_secret', { expiresIn: '1h' });
         res.status(200).json({ token });
     }
     catch (error) {
@@ -113,10 +112,22 @@ router.post('/signin', (req, res) => __awaiter(void 0, void 0, void 0, function*
         res.status(500).json({ message: 'Server error' });
     }
 }));
-router.get('/protected', authMiddleware_1.default, (req, res) => {
-    res.json({
-        message: 'Access granted',
-        user: req.user,
-    });
-});
+router.get('/protected', authMiddleware_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    try {
+        const email = (_a = req.user) === null || _a === void 0 ? void 0 : _a.email;
+        if (!email) {
+            return res.status(400).json({ message: 'Email not found in request' });
+        }
+        const user = yield (0, userHelpers_1.getUserDataByEmail)(email);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        return res.json({ message: 'Access granted', user });
+    }
+    catch (error) {
+        console.error('Error fetching user data:', error);
+        return res.status(500).json({ message: 'Server error' });
+    }
+}));
 exports.default = router;

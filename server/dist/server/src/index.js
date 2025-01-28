@@ -12,18 +12,43 @@ const db_1 = __importDefault(require("./config/db"));
 const auth_1 = __importDefault(require("./routes/auth"));
 const chat_1 = __importDefault(require("./routes/chat"));
 const transporter_1 = __importDefault(require("./config/transporter"));
-// Load environment variables
+transporter_1.default.verify((error, success) => {
+    if (error) {
+        console.error('SMTP connection error:', error);
+    }
+    else {
+        console.log('SMTP connection successful:', success);
+    }
+});
 dotenv_1.default.config();
-//process.env.CLIENT_URL
 const app = (0, express_1.default)();
 const server = (0, http_1.createServer)(app);
+const allowedOrigins = ['http://localhost:3000', process.env.CLIENT_URL];
 const io = new socket_io_1.Server(server, {
     cors: {
-        origin: process.env.CLIENT_URL,
+        origin: (origin, callback) => {
+            if (!origin || allowedOrigins.includes(origin)) {
+                callback(null, true);
+            }
+            else {
+                callback(new Error('Not allowed by CORS'));
+            }
+        },
         methods: ['GET', 'POST'],
+        credentials: true,
     },
 });
-app.use((0, cors_1.default)());
+app.use((0, cors_1.default)({
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        }
+        else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true,
+}));
 app.use(express_1.default.json());
 (0, db_1.default)();
 io.on('connection', (socket) => {
@@ -35,18 +60,8 @@ io.on('connection', (socket) => {
         console.log('User disconnected:', socket.id);
     });
 });
-transporter_1.default.verify((error, success) => {
-    if (error) {
-        console.error('SMTP connection error:', error);
-    }
-    else {
-        console.log('SMTP connection successful:', success);
-    }
-});
-// Mount routes
 app.use('/api/auth', auth_1.default);
 app.use('/api/chat', chat_1.default);
-// Health Check Route
 app.get('/', (req, res) => {
     res.send('Server is running');
 });
