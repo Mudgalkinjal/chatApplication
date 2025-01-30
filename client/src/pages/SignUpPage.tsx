@@ -12,7 +12,6 @@ type SignUpFormData = {
   confirmPassword: string
 }
 
-// Validation Schema
 const validationSchema = Yup.object().shape({
   name: Yup.string().required('Name is required'),
   email: Yup.string()

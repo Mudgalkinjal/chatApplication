@@ -91,6 +91,7 @@ const ChatApp = () => {
     const fetchUsers = async () => {
       try {
         const response = await getUsers(user1)
+        console.log(response)
 
         if (!Array.isArray(response)) {
           console.error('Invalid response format. Expected an array.')
@@ -115,7 +116,10 @@ const ChatApp = () => {
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        if (!user1 || !user2) return
+        if (!user1 || !user2) {
+          console.warn('Skipping fetchMessages due to missing user IDs.')
+          return
+        }
 
         const msgs = await getMessages(user1, user2)
         setMessages(msgs)
@@ -221,7 +225,6 @@ const ChatApp = () => {
         <section className="col-span-2 flex flex-col bg-white p-4 rounded-md shadow">
           <div className="flex-1 overflow-y-auto bg-gray-50 p-4 rounded-md">
             {user2Name ? (
-              // Show messages when a user is selected
               messages &&
               messages.map((msg, index) => (
                 <div
@@ -241,7 +244,6 @@ const ChatApp = () => {
                 </div>
               ))
             ) : (
-              // Placeholder content when no user is selected
               <div className="flex flex-col items-center justify-center h-full text-gray-500">
                 <p className="text-xl mb-2">
                   👋 Select a user to start chatting!
@@ -252,11 +254,9 @@ const ChatApp = () => {
               </div>
             )}
 
-            {/* Reference for automatic scroll */}
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Message Input */}
           <div className="mt-4 flex">
             <input
               type="text"

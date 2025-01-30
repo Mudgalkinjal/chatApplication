@@ -22,11 +22,9 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const userHelpers_1 = require("../utils/userHelpers");
 const router = express_1.default.Router();
 dotenv_1.default.config();
-// Example route
 router.get('/', (req, res) => {
     res.send('Auth endpoint is working');
 });
-// Sign Up Route
 router.post('/signup', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { name, email, password } = req.body;
     try {
@@ -35,15 +33,15 @@ router.post('/signup', (req, res) => __awaiter(void 0, void 0, void 0, function*
             return res.status(400).json({ message: 'Email already exists' });
         }
         const hashedPassword = yield bcryptjs_1.default.hash(password, 12);
+        const botId = '65a000000000000000000000'; // Replace with actual bot ID
         const newUser = new User_1.User({
             name,
             email,
             password: hashedPassword,
             isVerified: false,
+            friends: [botId],
         });
-        const token = jsonwebtoken_1.default.sign({ name: name, email: email }, process.env.JWT_SECRET || 'your_secret', {
-            expiresIn: '1h',
-        });
+        const token = jsonwebtoken_1.default.sign({ name: name, email: email }, process.env.JWT_SECRET || 'your_secret', { expiresIn: '1h' });
         const verificationUrl = `${process.env.BASE_URL}/api/auth/verify-email?token=${token}`;
         const mailOptions = {
             from: 'noreply@yourapp.com',
@@ -92,7 +90,6 @@ router.get('/verify-email', (req, res) => __awaiter(void 0, void 0, void 0, func
         return res.redirect(`${process.env.CLIENT_URL}/verify-email?status=invalid-token`);
     }
 }));
-// Sign In Route
 router.post('/signin', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, password } = req.body;
     try {
@@ -103,6 +100,9 @@ router.post('/signin', (req, res) => __awaiter(void 0, void 0, void 0, function*
         const isPasswordValid = yield bcryptjs_1.default.compare(password, user.password);
         if (!isPasswordValid) {
             return res.status(400).json({ message: 'Invalid credentials' });
+        }
+        if (!user._id) {
+            return res.status(500).json({ message: 'User ID missing' });
         }
         const token = jsonwebtoken_1.default.sign({ userId: user._id, email: user.email }, process.env.JWT_SECRET || 'your_secret', { expiresIn: '1h' });
         res.status(200).json({ token });

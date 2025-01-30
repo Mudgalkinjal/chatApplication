@@ -26,7 +26,7 @@ export const getMessages = async (user1: string, user2: string) => {
     }
 
     const data = await response.json()
-    return data // Return fetched messages
+    return data
   } catch (error) {
     console.error('Error fetching messages:', error)
     return []
@@ -35,6 +35,6 @@ export const getMessages = async (user1: string, user2: string) => {
 
 export const getUsers = async (user1: string) => {
   const response = await fetch(`${API_URL}/api/chat/getUsers?user1=${user1}`)
-  const data = await response.json() // Parse the response body only once
+  const data = await response.json()
   return data
 }

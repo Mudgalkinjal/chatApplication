@@ -12,12 +12,10 @@ const router = express.Router()
 
 dotenv.config()
 
-// Example route
 router.get('/', (req: Request, res: Response) => {
   res.send('Auth endpoint is working')
 })
 
-// Sign Up Route
 router.post('/signup', async (req: Request, res: Response) => {
   const { name, email, password } = req.body
   try {
@@ -25,19 +23,23 @@ router.post('/signup', async (req: Request, res: Response) => {
     if (existingUser) {
       return res.status(400).json({ message: 'Email already exists' })
     }
+
     const hashedPassword = await bcrypt.hash(password, 12)
+
+    const botId = '65a000000000000000000000' // Replace with actual bot ID
+
     const newUser = new User({
       name,
       email,
       password: hashedPassword,
       isVerified: false,
+      friends: [botId],
     })
+
     const token = jwt.sign(
       { name: name, email: email },
       process.env.JWT_SECRET || 'your_secret',
-      {
-        expiresIn: '1h',
-      }
+      { expiresIn: '1h' }
     )
 
     const verificationUrl = `${process.env.BASE_URL}/api/auth/verify-email?token=${token}`
@@ -67,6 +69,7 @@ router.post('/signup', async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Server error' })
   }
 })
+
 router.get('/verify-email', async (req, res) => {
   const { token } = req.query
 
@@ -105,9 +108,9 @@ router.get('/verify-email', async (req, res) => {
   }
 })
 
-// Sign In Route
 router.post('/signin', async (req: Request, res: Response) => {
   const { email, password } = req.body
+
   try {
     const user = await User.findOne({ email })
     if (!user) {
@@ -117,6 +120,9 @@ router.post('/signin', async (req: Request, res: Response) => {
     const isPasswordValid = await bcrypt.compare(password, user.password)
     if (!isPasswordValid) {
       return res.status(400).json({ message: 'Invalid credentials' })
+    }
+    if (!user._id) {
+      return res.status(500).json({ message: 'User ID missing' })
     }
     const token = jwt.sign(
       { userId: user._id, email: user.email },

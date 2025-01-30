@@ -1,11 +1,15 @@
 import express from 'express'
 import { createServer } from 'http'
 import { Server } from 'socket.io'
+import mongoose from 'mongoose'
+import { User } from './models/User'
+import bcrypt from 'bcryptjs'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import connectDB from './config/db'
 import authRoutes from './routes/auth'
 import chatRoutes from './routes/chat'
+import friendsRoutes from './routes/friends'
 import transporter from './config/transporter'
 
 transporter.verify((error, success) => {
@@ -67,9 +71,41 @@ io.on('connection', (socket) => {
 
 app.use('/api/auth', authRoutes)
 app.use('/api/chat', chatRoutes)
+app.use('/api/friends', friendsRoutes)
+
 app.get('/', (req, res) => {
   res.send('Server is running')
 })
+
+mongoose
+  .connect(process.env.MONGO_URI || 'mongodb://localhost:27017/chatapp')
+  .then(async () => {
+    console.log('MongoDB connected')
+
+    const botId = '65a000000000000000000000'
+    const existingBot = await User.findById(botId)
+
+    if (!existingBot) {
+      console.log('Creating Company Support Bot...')
+
+      const hashedPassword = await bcrypt.hash('defaultpassword', 12)
+
+      await User.create({
+        _id: new mongoose.Types.ObjectId(botId),
+        name: 'Company Support Bot',
+        email: 'support@yourapp.com',
+        password: hashedPassword,
+        isBot: true,
+        isVerified: true,
+        friends: [],
+      })
+
+      console.log('Company Support Bot created successfully.')
+    } else {
+      console.log('Company Support Bot already exists.')
+    }
+  })
+  .catch((err) => console.error('MongoDB connection error:', err))
 
 const PORT = 5001
 server.listen(PORT, () => {

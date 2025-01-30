@@ -29,7 +29,7 @@ const getMessages = (user1, user2) => __awaiter(void 0, void 0, void 0, function
             throw new Error('Failed to fetch messages');
         }
         const data = yield response.json();
-        return data; // Return fetched messages
+        return data;
     }
     catch (error) {
         console.error('Error fetching messages:', error);
@@ -39,7 +39,7 @@ const getMessages = (user1, user2) => __awaiter(void 0, void 0, void 0, function
 exports.getMessages = getMessages;
 const getUsers = (user1) => __awaiter(void 0, void 0, void 0, function* () {
     const response = yield fetch(`${API_URL}/api/chat/getUsers?user1=${user1}`);
-    const data = yield response.json(); // Parse the response body only once
+    const data = yield response.json();
     return data;
 });
 exports.getUsers = getUsers;

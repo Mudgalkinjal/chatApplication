@@ -10,5 +10,7 @@ const UserSchema = new mongoose_1.default.Schema({
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     isVerified: { type: Boolean, default: false },
+    isBot: { type: Boolean, default: false },
+    friends: [{ type: mongoose_1.default.Schema.Types.ObjectId, ref: 'User' }],
 }, { collection: 'UserData' });
 exports.User = mongoose_1.default.model('User', UserSchema);
