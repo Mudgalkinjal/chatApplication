@@ -32,9 +32,15 @@ router.post('/add-friend', (req, res) => __awaiter(void 0, void 0, void 0, funct
         res.status(500).json({ error: 'Failed to add friend' });
     }
 }));
-router.get('/friends/:userId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get('/:userId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log('inside route get user id friends');
+    console.log(req.params.userId);
+    console.log('---------');
     try {
         const user = yield User_1.User.findById(req.params.userId).populate('friends', 'name email');
+        console.log('friends loop');
+        console.log(user === null || user === void 0 ? void 0 : user.friends);
+        console.log('---------');
         if (!user)
             return res.status(404).json({ error: 'User not found' });
         res.json(user.friends);

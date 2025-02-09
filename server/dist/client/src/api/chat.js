@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUsers = exports.getMessages = exports.sendMessage = void 0;
+exports.getFriends = exports.getUsers = exports.getMessages = exports.sendMessage = void 0;
 const API_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5001';
 // Send a Message
 const sendMessage = (sender, receiver, message) => __awaiter(void 0, void 0, void 0, function* () {
@@ -43,3 +43,29 @@ const getUsers = (user1) => __awaiter(void 0, void 0, void 0, function* () {
     return data;
 });
 exports.getUsers = getUsers;
+const getFriends = (userId) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log('---------');
+    console.log('userId');
+    console.log(userId);
+    console.log('---------');
+    try {
+        const response = yield fetch(`${API_URL}/api/friends/${userId}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+        });
+        if (!response.ok) {
+            throw new Error('Error fetching friends');
+        }
+        const data = yield response.json();
+        console.log('---------');
+        console.log('response you want');
+        console.log(data);
+        console.log('---------');
+        return data.friends;
+    }
+    catch (error) {
+        console.error('Error in getFriends:', error);
+        throw error;
+    }
+});
+exports.getFriends = getFriends;

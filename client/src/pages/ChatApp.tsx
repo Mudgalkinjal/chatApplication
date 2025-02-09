@@ -1,127 +1,91 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { sendMessage, getMessages, getUsers } from '../api/chat'
+import { sendMessage, getMessages, getFriends } from '../api/chat'
 import { useNavigate } from 'react-router-dom'
-import { io, Socket } from 'socket.io-client'
+import { io } from 'socket.io-client'
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001'
-const socket: Socket = io(API_URL)
+const socket = io(API_URL)
 
 const ChatApp = () => {
   const navigate = useNavigate()
 
-  const [userData, setUserData] = useState<{
+  const [currentUser, setCurrentUser] = useState<{
+    id: string
     name: string
     email: string
-    id: string
   } | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [selectedUser, setSelectedUser] = useState<{
+    id: string
+    name: string
+  } | null>(null)
+  const [friends, setFriends] = useState<
+    { _id: string; name: string; email: string }[]
+  >([])
   const [messages, setMessages] = useState<any[]>([])
   const [newMessage, setNewMessage] = useState('')
-  const [user1, setUser1] = useState('')
-  const [user1Name, setUser1Name] = useState('')
-  const [user2Name, setUser2Name] = useState('')
-  const [user2, setUser2] = useState('')
-  const [users, setUsers] = useState<
-    { name: string; email: string; id: string }[]
-  >([])
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
 
-  const [unreadMessages, setUnreadMessages] = useState<Record<string, number>>(
-    {}
-  )
-
+  // Socket listener for incoming messages
   useEffect(() => {
     socket.on('receive_message', (data) => {
-      if (data.receiver === user1) {
-        setMessages((prevMessages) => [...prevMessages, data])
-
-        if (data.sender !== user2) {
-          setUnreadMessages((prev) => ({
-            ...prev,
-            [data.sender]: (prev[data.sender] || 0) + 1,
-          }))
-        }
+      if (data.receiver === currentUser?.id) {
+        setMessages((prev) => [...prev, data])
       }
     })
-
     return () => {
       socket.off('receive_message')
     }
-  }, [user1, user2])
+  }, [currentUser])
 
+  // Fetch current user data
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         const token = localStorage.getItem('authToken')
-        if (!token) {
-          throw new Error('No token found')
-        }
+        if (!token) throw new Error('No token found')
         const response = await fetch(`${API_URL}/api/auth/protected`, {
-          method: 'GET',
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
         })
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch user data')
-        }
-
+        if (!response.ok) throw new Error('Failed to fetch user data')
         const data = await response.json()
-        setUser1(data.user.userId)
-        setUser1Name(data.user.name)
-
-        setUserData({
+        setCurrentUser({
+          id: data.user._id,
           name: data.user.name,
           email: data.user.email,
-          id: data.user.userId,
         })
       } catch (error) {
         console.error('Error fetching user data:', error)
         navigate('/signin')
-      } finally {
-        setLoading(false)
       }
     }
 
     fetchUserData()
   }, [navigate])
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await getUsers(user1)
-        console.log(response)
 
-        if (!Array.isArray(response)) {
-          console.error('Invalid response format. Expected an array.')
-          return
-        }
-        const filteredUsers = response.map(
-          (user: { name: any; email: any; _id: any }) => ({
-            name: user.name,
-            email: user.email,
-            id: user._id,
-          })
-        )
-        setUsers(filteredUsers)
+  // Fetch friends (which includes the support user)
+  useEffect(() => {
+    const fetchFriends = async () => {
+      if (!currentUser) return
+      try {
+        const friendsList = await getFriends(currentUser.id)
+        setFriends(friendsList || [])
       } catch (error) {
-        console.error('Error fetching users:', error)
+        console.error('Error fetching friends:', error)
       }
     }
 
-    fetchUsers()
-  }, [user1])
+    fetchFriends()
+  }, [currentUser])
 
+  // Fetch messages when a conversation is selected
   useEffect(() => {
     const fetchMessages = async () => {
+      if (!currentUser || !selectedUser) return
       try {
-        if (!user1 || !user2) {
-          console.warn('Skipping fetchMessages due to missing user IDs.')
-          return
-        }
-
-        const msgs = await getMessages(user1, user2)
+        const msgs = await getMessages(currentUser.id, selectedUser.id)
         setMessages(msgs)
       } catch (error) {
         console.error('Error fetching messages:', error)
@@ -129,155 +93,114 @@ const ChatApp = () => {
     }
 
     fetchMessages()
-  }, [user1, user2])
+  }, [currentUser, selectedUser])
 
-  const scrollToBottom = () => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
-    }
-  }
-
+  // Auto-scroll to latest message
   useEffect(() => {
-    scrollToBottom()
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  if (loading) {
-    return <div className="text-center py-10 text-gray-700">Loading...</div>
+  const handleUserSelection = (id: string, name: string) => {
+    setSelectedUser({ id, name })
   }
 
-  if (!userData) {
-    return (
-      <div className="text-center py-10 text-red-600">
-        Error fetching user data. Please try again later.
-      </div>
-    )
-  }
-
-  const handleUserSelection = (userId: string, userName: string) => {
-    setUser2(userId)
-    setUser2Name(userName)
-
-    setUnreadMessages((prev) => {
-      const updated = { ...prev }
-      delete updated[userId]
-      return updated
-    })
-  }
   const handleSignOut = () => {
-    setUserData(null)
+    setCurrentUser(null)
     navigate('/signin')
   }
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim()) return
-
+    if (!newMessage.trim() || !currentUser || !selectedUser) return
     try {
-      const msg = await sendMessage(user1, user2, newMessage)
-
-      setMessages((prevMessages) => [...prevMessages, msg])
-
+      const msg = await sendMessage(currentUser.id, selectedUser.id, newMessage)
+      setMessages((prev) => [...prev, msg])
       socket.emit('send_message', msg)
-
       setNewMessage('')
     } catch (error) {
       console.error('Error sending message:', error)
     }
   }
 
+  if (!currentUser) {
+    return <div className="text-center py-10">Loading...</div>
+  }
+
   return (
     <div className="max-w-4xl mx-auto py-10 px-5">
-      {/* Header Section */}
       <header className="bg-indigo-600 text-white py-4 px-6 rounded-md mb-6">
-        <h1 className="text-xl font-semibold">Welcome, {userData.name}</h1>
+        <h1 className="text-xl font-semibold">Welcome, {currentUser.name}</h1>
       </header>
-
       <main className="grid grid-cols-3 gap-6">
-        {/* User List */}
+        {/* Friends List */}
         <aside className="col-span-1 bg-gray-100 p-4 rounded-md shadow">
-          <h2 className="text-lg font-semibold mb-4 text-indigo-600">Users</h2>
-          {users.map((user) => (
+          <h2 className="text-lg font-semibold mb-4 text-indigo-600">
+            Friends
+          </h2>
+          {friends.map((friend) => (
             <div
-              key={user.id}
-              onClick={() => handleUserSelection(user.id, user.name)}
-              className="relative py-2 border-b cursor-pointer flex items-center justify-between hover:bg-indigo-50"
+              key={friend._id}
+              onClick={() => handleUserSelection(friend._id, friend.name)}
+              className="py-2 border-b cursor-pointer hover:bg-indigo-50"
             >
-              <span className="text-gray-700">{user.name}</span>
-
-              {/* Notification Bubble */}
-              {unreadMessages[user.id] && (
-                <span className="flex items-center justify-center w-6 h-6 bg-red-500 text-white text-xs font-bold rounded-full">
-                  {unreadMessages[user.id]}
-                </span>
-              )}
+              {friend.name}
             </div>
           ))}
-          <div className="mt-4 flex">
-            <button
-              onClick={handleSignOut}
-              className="bg-red-500 text-white px-2 py-1 rounded-md hover:bg-red-600 mt-2"
-            >
-              Sign Out
-            </button>
-          </div>
+          <button
+            onClick={handleSignOut}
+            className="mt-4 bg-red-500 text-white px-2 py-1 rounded-md"
+          >
+            Sign Out
+          </button>
         </aside>
 
         {/* Chat Section */}
         <section className="col-span-2 flex flex-col bg-white p-4 rounded-md shadow">
           <div className="flex-1 overflow-y-auto bg-gray-50 p-4 rounded-md">
-            {user2Name ? (
-              messages &&
-              messages.map((msg, index) => (
+            {selectedUser ? (
+              messages.map((msg, idx) => (
                 <div
-                  key={index}
+                  key={idx}
                   className={`mb-4 p-3 rounded-md ${
-                    msg.sender === user1
+                    msg.sender === currentUser.id
                       ? 'bg-indigo-100 text-indigo-800 self-end'
                       : 'bg-gray-200 text-gray-800'
                   }`}
                 >
-                  <p>
-                    <strong>
-                      {msg.sender === user1 ? user1Name : user2Name}:
-                    </strong>{' '}
-                    {msg.message}
-                  </p>
+                  <strong>
+                    {msg.sender === currentUser.id
+                      ? currentUser.name
+                      : selectedUser.name}
+                    :
+                  </strong>{' '}
+                  {msg.message}
                 </div>
               ))
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-gray-500">
                 <p className="text-xl mb-2">
-                  👋 Select a user to start chatting!
-                </p>
-                <p className="text-sm text-gray-400">
-                  Browse the user list on the left and click to open a chat.
+                  👋 Select a friend to start chatting!
                 </p>
               </div>
             )}
-
             <div ref={messagesEndRef} />
           </div>
-
           <div className="mt-4 flex">
             <input
               type="text"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               placeholder="Type a message"
-              className={`flex-1 p-2 border rounded-md focus:ring ${
-                user2Name
-                  ? 'focus:ring-indigo-200'
-                  : 'bg-gray-200 cursor-not-allowed'
-              }`}
-              disabled={!user2Name}
+              className="flex-1 p-2 border rounded-md"
+              disabled={!selectedUser}
             />
             <button
               onClick={handleSendMessage}
               className={`ml-2 px-4 py-2 rounded-md ${
-                user2Name
-                  ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                selectedUser
+                  ? 'bg-indigo-600 text-white'
                   : 'bg-gray-400 text-gray-600 cursor-not-allowed'
               }`}
-              disabled={!user2Name}
+              disabled={!selectedUser}
             >
               Send
             </button>

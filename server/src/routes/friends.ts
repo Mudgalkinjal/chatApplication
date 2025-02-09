@@ -24,14 +24,20 @@ router.post('/add-friend', async (req, res) => {
   }
 })
 
-router.get('/friends/:userId', async (req, res) => {
+router.get('/:userId', async (req, res) => {
+  console.log('inside route get user id friends')
+  console.log(req.params.userId)
+  console.log('---------')
+
   try {
     const user = await User.findById(req.params.userId).populate(
       'friends',
       'name email'
     )
+    console.log('friends loop')
+    console.log(user?.friends)
+    console.log('---------')
     if (!user) return res.status(404).json({ error: 'User not found' })
-
     res.json(user.friends)
   } catch (error) {
     console.error('Error fetching friends:', error)

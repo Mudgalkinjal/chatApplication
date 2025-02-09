@@ -38,3 +38,22 @@ export const getUsers = async (user1: string) => {
   const data = await response.json()
   return data
 }
+
+export const getFriends = async (userId: string) => {
+  try {
+    const response = await fetch(`${API_URL}/api/friends/${userId}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    })
+
+    if (!response.ok) {
+      throw new Error('Error fetching friends')
+    }
+    const data = await response.json()
+
+    return data
+  } catch (error) {
+    console.error('Error in getFriends:', error)
+    throw error
+  }
+}
